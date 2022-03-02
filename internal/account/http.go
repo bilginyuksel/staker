@@ -8,7 +8,7 @@ import (
 )
 
 type HTTPService interface {
-	Import(ctx context.Context, mnemonic string) (string, error)
+	Import(ctx context.Context, mnemonic string) (Account, error)
 }
 
 type HTTP struct {
@@ -20,14 +20,20 @@ func (h *HTTP) RegisterRoutes(router *echo.Echo) {
 	router.GET("/accounts", h.GetAccounts)
 }
 
+func NewHTTP(s HTTPService) *HTTP {
+	return &HTTP{s}
+}
+
 type (
 	importAccountReq struct {
-		Mnemonic string `json:"mnemonic"`
+		Mnemonic       string `json:"mnemonic"`
+		WalletID       string `json:"wallet_id"`
+		WalletPassword string `json:"wallet_password"`
 	}
 
 	importAccountRes struct {
-		PubKey  string `json:"pub_key"`
-		Balance int64  `json:"balance"`
+		Address string `json:"address"`
+		Balance uint64 `json:"balance"`
 	}
 )
 
@@ -39,14 +45,14 @@ func (h *HTTP) ImportAccount(c echo.Context) error {
 		return err
 	}
 
-	pubKey, err := h.service.Import(c.Request().Context(), req.Mnemonic)
+	account, err := h.service.Import(c.Request().Context(), req.Mnemonic)
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusOK, importAccountRes{
-		PubKey:  pubKey,
-		Balance: 0,
+		Address: account.Address,
+		Balance: account.Balance,
 	})
 }
 
