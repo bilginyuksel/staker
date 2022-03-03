@@ -40,7 +40,7 @@ type (
 		// ImportKey given wallet handle token and private key
 		// return the address if successful
 		ImportKey(walletToken string, key ed25519.PrivateKey) (string, error)
-		ListKeys(id, password string) ([]string, error)
+		ListKeys(walletToken string) ([]string, error)
 	}
 )
 
@@ -91,10 +91,17 @@ func (s *Service) importAccountFrom(mnemonic string) (string, error) {
 
 // Get return the all accounts information in default wallet
 func (s *Service) Get(ctx context.Context) (accounts []Account, err error) {
-	addresses, err := s.kmd.ListKeys(_defaultWalletID, _defaultWalletPassword)
+	walletToken, err := s.kmd.InitWalletHandle(_defaultWalletID, _defaultWalletPassword)
+	if err != nil {
+		log.Println("kmd init wallet handle failed, err:", err)
+		return
+	}
+	log.Println("wallet token initialized")
+
+	addresses, err := s.kmd.ListKeys(walletToken)
 	if err != nil {
 		log.Printf("kmd list keys failed, err: %v\n", err)
-		return nil, err
+		return
 	}
 	log.Printf("kmd list keys success, len(addresses): %d\n", len(addresses))
 

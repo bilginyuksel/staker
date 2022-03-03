@@ -29,12 +29,7 @@ func (k *KMD) ImportKey(walletToken string, key ed25519.PrivateKey) (string, err
 }
 
 // ListKeys given wallet id and password find all the keys in the wallet
-func (k *KMD) ListKeys(id, password string) ([]string, error) {
-	token, err := k.InitWalletHandle(id, password)
-	if err != nil {
-		return nil, err
-	}
-
+func (k *KMD) ListKeys(token string) ([]string, error) {
 	res, err := k.client.ListKeys(token)
 	return res.Addresses, err
 }
