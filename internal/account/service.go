@@ -12,8 +12,8 @@ var (
 )
 
 const (
-	_walletID       = "test"
-	_walletPassword = "test"
+	_defaultWalletID       = "test"
+	_defaultWalletPassword = "test"
 )
 
 type Account struct {
@@ -39,6 +39,7 @@ type (
 		// ImportKey given wallet handle token and private key
 		// return the address if successful
 		ImportKey(walletToken string, key ed25519.PrivateKey) (string, error)
+		ListKeys(id, password string) ([]string, error)
 	}
 )
 
@@ -73,10 +74,29 @@ func (s *Service) importAccountFrom(mnemonic string) (string, error) {
 		return "", ErrMnemoicInvalid
 	}
 
-	walletToken, err := s.kmd.InitWalletHandle(_walletID, _walletPassword)
+	walletToken, err := s.kmd.InitWalletHandle(_defaultWalletID, _defaultWalletPassword)
 	if err != nil {
 		return "", err
 	}
 
 	return s.kmd.ImportKey(walletToken, privateKey)
+}
+
+// Get return the all accounts information in default wallet
+func (s *Service) Get(ctx context.Context) (accounts []Account, err error) {
+	addresses, err := s.kmd.ListKeys(_defaultWalletID, _defaultWalletPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, address := range addresses {
+		account, err := s.algod.AccountInformation(ctx, address)
+		if err != nil {
+			return nil, err
+		}
+
+		accounts = append(accounts, account)
+	}
+
+	return
 }

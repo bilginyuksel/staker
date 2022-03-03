@@ -9,6 +9,7 @@ import (
 
 type HTTPService interface {
 	Import(ctx context.Context, mnemonic string) (Account, error)
+	Get(ctx context.Context) ([]Account, error)
 }
 
 type HTTP struct {
@@ -56,8 +57,37 @@ func (h *HTTP) ImportAccount(c echo.Context) error {
 	})
 }
 
+type (
+	accountDetails struct {
+		Address string `json:"address"`
+		Balance uint64 `json:"balance"`
+	}
+
+	getAccountRes []accountDetails
+)
+
+func fromAccounts(accounts []Account) (res getAccountRes) {
+	for _, account := range accounts {
+		res = append(res, fromAccount(account))
+	}
+
+	return
+}
+
+func fromAccount(account Account) accountDetails {
+	return accountDetails{
+		Address: account.Address,
+		Balance: account.Balance,
+	}
+}
+
 // GetAccounts fetch all accounts with their public id and balance.
 // In the default wallet or provide the wallet id to fetch the accounts
 func (h *HTTP) GetAccounts(c echo.Context) error {
-	return c.JSON(http.StatusOK, "")
+	accounts, err := h.service.Get(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, fromAccounts(accounts))
 }
