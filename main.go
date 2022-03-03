@@ -9,6 +9,7 @@ import (
 	"github.com/bilginyuksel/staker/internal/account"
 	"github.com/bilginyuksel/staker/internal/account/adapter"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -29,6 +30,7 @@ func main() {
 	httpHandler := account.NewHTTP(accountService)
 
 	e := echo.New()
+	e.Use(middleware.Logger())
 	httpHandler.RegisterRoutes(e)
 
 	if err := e.Start(fmt.Sprintf(":%d", conf.AppPort)); err != nil {
