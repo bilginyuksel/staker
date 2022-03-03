@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/bilginyuksel/staker/internal/account"
 	"github.com/bilginyuksel/staker/internal/account/adapter"
@@ -29,12 +31,14 @@ func main() {
 	e := echo.New()
 	httpHandler.RegisterRoutes(e)
 
-	if err := e.Start(":8080"); err != nil {
+	if err := e.Start(fmt.Sprintf(":%d", conf.AppPort)); err != nil {
 		log.Fatal(err)
 	}
 }
 
 type Config struct {
+	AppPort int
+
 	AlgoD struct {
 		URL   string
 		Token string
@@ -47,7 +51,13 @@ type Config struct {
 }
 
 func readConfig() Config {
+	port, err := strconv.Atoi(getenv("APP_PORT", "8888"))
+	if err != nil {
+		panic(err)
+	}
+
 	return Config{
+		AppPort: port,
 		AlgoD: struct {
 			URL   string
 			Token string
@@ -63,4 +73,12 @@ func readConfig() Config {
 			Token: os.Getenv("KMD_TOKEN"),
 		},
 	}
+}
+
+func getenv(key, fallback string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+	return value
 }
