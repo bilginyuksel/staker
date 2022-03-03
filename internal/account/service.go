@@ -22,18 +22,18 @@ type Account struct {
 	ImportedAt time.Time
 }
 
-type Restorer interface {
-	FromMnemonic(mnemonic string) (ed25519.PrivateKey, error)
-	FromPrivateKey(privateKey ed25519.PrivateKey) (string, error)
-}
-
 type (
+	Restorer interface {
+		FromMnemonic(mnemonic string) (ed25519.PrivateKey, error)
+		FromPrivateKey(privateKey ed25519.PrivateKey) (string, error)
+	}
+
 	AlgodClient interface {
 		// AccountInformation retrive the account information in node
 		AccountInformation(ctx context.Context, address string) (Account, error)
 	}
 
-	KmdClient interface {
+	KMDClient interface {
 		// InitWalletHandle given id and password return the wallet handle token
 		InitWalletHandle(id, password string) (string, error)
 		// ImportKey given wallet handle token and private key
@@ -46,10 +46,10 @@ type (
 type Service struct {
 	restorer Restorer
 	algod    AlgodClient
-	kmd      KmdClient
+	kmd      KMDClient
 }
 
-func NewService(restorer Restorer, algod AlgodClient, kmd KmdClient) *Service {
+func NewService(restorer Restorer, algod AlgodClient, kmd KMDClient) *Service {
 	return &Service{
 		restorer: restorer,
 		algod:    algod,
